@@ -1,0 +1,139 @@
+================================================================================
+                    INFORMATION NEEDED FOR DEPLOYMENT
+================================================================================
+
+Your MiniNexus API is ready for GCP deployment! Please provide these 8 items:
+
+================================================================================
+1. GITHUB REPOSITORY URL
+================================================================================
+
+Format: https://github.com/YOUR_USERNAME/REPO_NAME
+
+Your answer: _________________________________________________________________
+
+
+================================================================================
+2. GITHUB USERNAME
+================================================================================
+
+Format: Your GitHub handle (e.g., octocat)
+
+Your answer: _________________________________________________________________
+
+
+================================================================================
+3. GCP PROJECT ID
+================================================================================
+
+Format: Lowercase, 3-30 characters (e.g., mininexus-prod-123)
+
+If you have an existing GCP project, provide its ID.
+Otherwise, make up a unique ID and I'll help create it.
+
+Your answer: _________________________________________________________________
+
+
+================================================================================
+4. GCP REGION (OPTIONAL - Default: us-central1)
+================================================================================
+
+Choose one:
+  [ ] us-central1  (Iowa) - RECOMMENDED
+  [ ] us-east1     (South Carolina)
+  [ ] europe-west1 (Belgium)
+  [ ] asia-east1   (Taiwan)
+
+Your answer: _________________________________________________________________
+
+
+================================================================================
+5. XANO API BASE URL
+================================================================================
+
+Where to find:
+  1. Log in to Xano dashboard
+  2. Settings → API Base URL
+  3. Copy the full URL
+
+Format: https://YOUR_INSTANCE.xano.io/api:XXXX
+
+Your answer: _________________________________________________________________
+
+
+================================================================================
+6. XANO DEMO EMAIL
+================================================================================
+
+For testing, what email should be used for login?
+
+Example: amara@horizonvc.com
+
+Your answer: _________________________________________________________________
+
+
+================================================================================
+7. XANO DEMO PASSWORD
+================================================================================
+
+For testing, what password works with the above email?
+
+Example: demo123
+
+Your answer: _________________________________________________________________
+
+
+================================================================================
+8. JWT SECRET
+================================================================================
+
+Option A: I generate it (reply: "generate")
+Option B: You generate it and provide
+
+If generating yourself:
+  $ openssl rand -hex 32
+
+Example output:
+  a7f9e2c1d4b6c8e3f5a9d2b1c4e7f0a3d6b9c2e5f8a1d4c7b0e3f6a9d2c5
+
+Your answer: _________________________________________________________________
+
+
+================================================================================
+9. GCP BILLING ACCOUNT ID (ONLY IF CREATING NEW PROJECT)
+================================================================================
+
+This is only needed if you DON'T already have a GCP project.
+
+Format: Usually shown as XXXXXX-XXXXXX in GCP Console
+
+If you have an existing GCP project with billing, leave this blank.
+
+Your answer: _________________________________________________________________
+
+
+================================================================================
+FALKORDB CONFIGURATION (ALREADY SET ✅)
+================================================================================
+
+  Host:     deploy_instance_1.falkordb.io
+  User:     oliaro
+  Password: Pasnipop
+
+
+================================================================================
+NEXT STEPS
+================================================================================
+
+1. Fill out this form with your answers
+2. Reply with completed information
+3. I'll configure GitHub Secrets
+4. I'll create GitHub Actions workflow
+5. You push to GitHub → Auto-deployment starts!
+
+Questions? See:
+  - NEXT_STEPS.md (detailed explanation)
+  - DEPLOYMENT_GUIDE.md (full walkthrough)
+  - DEPLOYMENT_CHECKLIST.md (quick reference)
+
+================================================================================

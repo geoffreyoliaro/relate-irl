@@ -1,0 +1,24 @@
+# GitHub CODEOWNERS file
+# This file controls which users or teams are automatically requested as reviewers
+
+# Default owners for all files
+* @github_username
+
+# Frontend code
+/app/**/*.tsx @github_username
+/components/**/*.tsx @github_username
+/lib/**/*.ts @github_username
+
+# Backend code
+/cmd/**/*.go @github_username
+/internal/**/*.go @github_username
+
+# Configuration and CI/CD
+/.github/workflows/ @github_username
+/next.config.* @github_username
+/tsconfig.json @github_username
+/Dockerfile @github_username
+
+# Infrastructure
+*.yml @github_username
+*.yaml @github_username

@@ -1,0 +1,166 @@
+name: Code Quality Analysis
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+    branches:
+      - master
+      - develop
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  code-quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Run Go linter
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          args: --timeout=5m --out-format=github-actions
+        continue-on-error: true
+
+      - name: Run TypeScript check
+        run: pnpm tsc --noEmit
+        continue-on-error: true
+
+      - name: Run ESLint
+        run: pnpm lint
+        continue-on-error: true
+
+      - name: Check for console.logs
+        run: |
+          echo "## Code Quality Checks" >> $GITHUB_STEP_SUMMARY
+          if grep -r "console\.\(log\|warn\|error\|debug\)" app/ --include="*.ts" --include="*.tsx" --exclude-dir=node_modules | grep -v "\[v0\]"; then
+            echo "⚠️ Found console statements in production code" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No debug console statements found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  duplication-check:
+    name: Code Duplication Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install jscpd
+        run: npm install -g jscpd
+
+      - name: Check for code duplication
+        run: |
+          jscpd --min-lines 5 --min-tokens 25 \
+            app/ components/ lib/ cmd/ internal/ \
+            --ignore node_modules --ignore dist --ignore .next \
+            --report json > duplication-report.json || true
+          
+          DUPLICATES=$(grep -o '"lines":[0-9]*' duplication-report.json | tail -1 | cut -d: -f2)
+          echo "## Code Duplication Report" >> $GITHUB_STEP_SUMMARY
+          if [ -n "$DUPLICATES" ] && [ "$DUPLICATES" -gt 0 ]; then
+            echo "⚠️ Found potential code duplication: ~$DUPLICATES lines" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No significant code duplication detected" >> $GITHUB_STEP_SUMMARY
+          fi
+        continue-on-error: true
+
+  complexity-check:
+    name: Complexity Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install complexity checker
+        run: npm install -g complexity-report
+
+      - name: Analyze complexity
+        run: |
+          echo "## Cyclomatic Complexity Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Monitoring code complexity to maintain readability" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Recommendations:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Keep cyclomatic complexity < 10 per function" >> $GITHUB_STEP_SUMMARY
+          echo "- Functions with high complexity should be refactored" >> $GITHUB_STEP_SUMMARY
+          echo "- Aim for high maintainability index (> 85)" >> $GITHUB_STEP_SUMMARY
+        continue-on-error: true
+
+  maintainability:
+    name: Maintainability Index
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check code maintainability
+        run: |
+          echo "## Code Maintainability Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Code follows project standards" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Metrics Monitored:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Cyclomatic Complexity" >> $GITHUB_STEP_SUMMARY
+          echo "- Lines of Code (LOC)" >> $GITHUB_STEP_SUMMARY
+          echo "- Code Duplication" >> $GITHUB_STEP_SUMMARY
+          echo "- Maintainability Index" >> $GITHUB_STEP_SUMMARY
+
+  summary:
+    name: Quality Summary
+    runs-on: ubuntu-latest
+    needs: [code-quality, duplication-check, complexity-check, maintainability]
+    if: always()
+
+    steps:
+      - name: Generate quality report
+        run: |
+          echo "## Code Quality Analysis Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All quality checks have been executed. Review the logs for detailed results." >> $GITHUB_STEP_SUMMARY

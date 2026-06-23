@@ -1,0 +1,115 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches:
+      - master
+      - develop
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  validate-pr:
+    name: Validate PR
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate commit messages
+        run: |
+          echo "Checking commit message format..."
+          git log --oneline origin/master..HEAD | while read commit; do
+            if ! echo "$commit" | grep -qE '^\w+\([a-z0-9 ]*\): |^Merge |^Revert '; then
+              echo "⚠️ Commit doesn't follow conventional commits: $commit"
+            fi
+          done
+          echo "✅ Commit validation complete"
+
+      - name: Check file changes
+        run: |
+          echo "## Changed Files" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          git diff --name-only origin/master...HEAD >> $GITHUB_STEP_SUMMARY || true
+
+  size-check:
+    name: Code Size Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Analyze code changes
+        run: |
+          echo "## PR Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Diff Stats" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          git diff --stat origin/master...HEAD || true
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+  has-description:
+    name: Check PR Description
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check PR description exists
+        run: |
+          DESCRIPTION="${{ github.event.pull_request.body }}"
+          if [ -z "$DESCRIPTION" ] || [ ${#DESCRIPTION} -lt 10 ]; then
+            echo "⚠️ PR description is missing or too short"
+            echo "Please add a meaningful description explaining the changes"
+          else
+            echo "✅ PR has a description"
+          fi
+        continue-on-error: true
+
+  version-check:
+    name: Version Bump Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if version was bumped
+        run: |
+          # Check if package.json version changed
+          BEFORE=$(git show origin/master:package.json | grep '"version"' | head -1 | sed 's/.*"version": "\([^"]*\)".*/\1/')
+          AFTER=$(cat package.json | grep '"version"' | head -1 | sed 's/.*"version": "\([^"]*\)".*/\1/')
+          
+          if [ "$BEFORE" == "$AFTER" ]; then
+            echo "ℹ️ Version was not bumped (current: $BEFORE)"
+          else
+            echo "✅ Version bumped from $BEFORE to $AFTER"
+          fi
+        continue-on-error: true
+
+  approval-check:
+    name: Review Requirements
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check PR info
+        run: |
+          echo "## PR Review Checklist" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Code follows project style guidelines" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Changes are well documented" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Tests pass and coverage is maintained" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] No breaking changes without discussion" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Ready for production deployment" >> $GITHUB_STEP_SUMMARY
