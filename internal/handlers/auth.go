@@ -32,6 +32,7 @@ type xanoAuthResponse struct {
 func Login(c *gin.Context) {
 	var req loginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		LogAuthEvent(c, "login_bad_request", map[string]string{"error": err.Error()})
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -39,6 +40,7 @@ func Login(c *gin.Context) {
 	// Step 1: Validate with Xano
 	xanoUser, err := validateWithXano(req.Email, req.Password)
 	if err != nil {
+		LogAuthEvent(c, "login_failed", map[string]string{"email": req.Email, "reason": "xano_invalid"})
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 		return
 	}
@@ -46,9 +48,12 @@ func Login(c *gin.Context) {
 	// Step 2: Issue our own JWT
 	token, err := issueJWT(fmt.Sprintf("%d", xanoUser.User.ID), xanoUser.User.Email)
 	if err != nil {
+		LogAuthEvent(c, "login_error", map[string]string{"email": req.Email, "reason": "jwt_issue"})
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not issue token"})
 		return
 	}
+
+	LogAuthEvent(c, "login_success", map[string]string{"user": fmt.Sprintf("%d", xanoUser.User.ID), "email": xanoUser.User.Email})
 
 	c.JSON(http.StatusOK, gin.H{
 		"token":      token,
