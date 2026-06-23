@@ -2,23 +2,23 @@
 # This file controls which users or teams are automatically requested as reviewers
 
 # Default owners for all files
-* @github_username
+* @geoffreyoliaro
 
 # Frontend code
-/app/**/*.tsx @github_username
-/components/**/*.tsx @github_username
-/lib/**/*.ts @github_username
+/app/**/*.tsx @geoffreyoliaro
+/components/**/*.tsx @geoffreyoliaro
+/lib/**/*.ts @geoffreyoliaro
 
 # Backend code
-/cmd/**/*.go @github_username
-/internal/**/*.go @github_username
+/cmd/**/*.go @geoffreyoliaro
+/internal/**/*.go @geoffreyoliaro
 
 # Configuration and CI/CD
-/.github/workflows/ @github_username
-/next.config.* @github_username
-/tsconfig.json @github_username
-/Dockerfile @github_username
+/.github/workflows/ @geoffreyoliaro
+/next.config.* @geoffreyoliaro
+/tsconfig.json @geoffreyoliaro
+/Dockerfile @geoffreyoliaro
 
 # Infrastructure
-*.yml @github_username
-*.yaml @github_username
+*.yml @geoffreyoliaro
+*.yaml @geoffreyoliaro
